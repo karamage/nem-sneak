@@ -26,11 +26,19 @@ class Connection(object):
             'http://localhost:7890'
 
     def dt2ts(self, dt):
+        """convert native datetime to NEM timeStamp
+
+        :param dt: native datetime
+        """
         return int((
             self.tz.localize(dt).astimezone(timezone.utc) - nem_epoch
         ).total_seconds())
 
     def ts2dt(self, ts):
+        """convert NEM timeStamp to tz aware datetime
+
+        :param ts: NEM timeStamp
+        """
         return pytz.utc.localize(
             datetime.fromtimestamp(ts + time.mktime(nem_epoch.timetuple()))
         ).astimezone(self.tz)
@@ -39,6 +47,11 @@ class Connection(object):
         return num / 1000000
 
     def get(self, route, param=None):
+        """get request
+
+        :param route: API route
+        :param param: get parameters (dict)
+        """
         url = self.base_url.strip('/') + '/' +\
             route.strip('/').strip('?') + ((
                 '?' + '&'.join((k + '=' + str(v) for k, v in param.items()))
@@ -47,12 +60,24 @@ class Connection(object):
             return json.load(getreader('utf-8')(conn))
 
     def get_account_info(self, account_address):
+        """get account info from /account/get route
+
+        :param account_address: the address of the account
+        """
         return self.get(
             route='account/get',
             param={'address': account_address}
         )
 
     def get_tx_single(self, type_, account_address, id_=None, hash_=None):
+        """get maximum of 25 transaction data.
+
+        :param type_: transaction type. one of 'all', 'incoming', 'outgoing'
+        :param account_address: the address of the account
+        :param id_: The transaction id up to which transactions are returned.
+        :param hash_: The 256 bit sha3 hash of the transaction up to which \
+            transactions are returned.
+        """
         param = {'address': account_address}
         if id_ is not None:
             param['id'] = id_
@@ -64,15 +89,42 @@ class Connection(object):
         )
 
     def get_outgoing_tx_single(self, account_address, id_=None, hash_=None):
+        """get maximum of 25 outgoing transaction data.
+
+        :param account_address: the address of the account
+        :param id_: The transaction id up to which transactions are returned.
+        :param hash_: The 256 bit sha3 hash of the transaction up to which \
+            transactions are returned.
+        """
         return self.get_tx_single('outgoing', account_address, id_, hash_)
 
     def get_incoming_tx_single(self, account_address, id_=None, hash_=None):
+        """get maximum of 25 incoming transaction data.
+
+        :param account_address: the address of the account
+        :param id_: The transaction id up to which transactions are returned.
+        :param hash_: The 256 bit sha3 hash of the transaction up to which \
+            transactions are returned.
+        """
         return self.get_tx_single('incoming', account_address, id_, hash_)
 
     def get_all_tx_single(self, account_address, id_=None, hash_=None):
+        """get maximum of 25 transaction data.
+
+        :param account_address: the address of the account
+        :param id_: The transaction id up to which transactions are returned.
+        :param hash_: The 256 bit sha3 hash of the transaction up to which \
+            transactions are returned.
+        """
         return self.get_tx_single('all', account_address, id_, hash_)
 
     def get_tx_loop(self, type_, account_address, dt_from):
+        """get the transaction data after ``dt_from``
+
+        :param type_: transaction type. one of 'all', 'incoming', 'outgoing'
+        :param account_address: the address of the account
+        :param dt_from: native datetime
+        """
         ts = self.dt2ts(dt_from)
         res = []
         id_ = None
@@ -97,10 +149,25 @@ class Connection(object):
         return res
 
     def get_outgoing_tx(self, account_address, dt_from):
+        """get the outgoing transaction data after ``dt_from``
+
+        :param account_address: the address of the account
+        :param dt_from: native datetime
+        """
         return self.get_tx_loop('outgoing', account_address, dt_from)
 
     def get_incoming_tx(self, account_address, dt_from):
+        """get the incoming transaction data after ``dt_from``
+
+        :param account_address: the address of the account
+        :param dt_from: native datetime
+        """
         return self.get_tx_loop('incoming', account_address, dt_from)
 
     def get_all_tx(self, account_address, dt_from):
+        """get the transaction data after ``dt_from``
+
+        :param account_address: the address of the account
+        :param dt_from: native datetime
+        """
         return self.get_tx_loop('all', account_address, dt_from)
