@@ -7,8 +7,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinxcontrib.asyncio',
+    'sphinx.ext.napoleon'
 ]
 
 templates_path = ['_templates']
