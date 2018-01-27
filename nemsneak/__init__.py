@@ -10,3 +10,14 @@ __email__ = u'osoken.devel@outlook.jp'
 __version__ = '0.0.0'
 
 __package_name__ = u'nemsneak'
+
+try:
+    from . import core
+    Connection = core.Connection
+except Exception as e:
+    x = e
+
+    def _(*args, **kwargs):
+        raise x
+
+    Connection = _
