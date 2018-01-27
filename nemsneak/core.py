@@ -40,9 +40,9 @@ class Connection(object):
 
     def get(self, route, param=None):
         url = self.base_url.strip('/') + '/' +\
-            route.strip('/').strip('?') + (
+            route.strip('/').strip('?') + ((
                 '?' + '&'.join((k + '=' + str(v) for k, v in param.items()))
-            ) if param is not None else ''
+            ) if param is not None else '')
         with closing(request.urlopen(url)) as conn:
             return json.load(getreader('utf-8')(conn))
 
