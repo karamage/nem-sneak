@@ -17,5 +17,5 @@ setup(
     description=__description__,
     long_description=__long_description__,
     packages=[__package_name__],
-    install_requires=['future']
+    install_requires=['pytz']
 )
