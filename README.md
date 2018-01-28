@@ -41,7 +41,7 @@ import nemsneak
 import pytz
 from datetime import datetime
 
-conn = nemsneak.Connection(pytz.timezone('Asia/Tokyo'), 'http://samurai:7890')
+conn = nemsneak.Connection(pytz.timezone('Asia/Tokyo'), 'http://your_nis_address:7890')
 conn.get('/status') # access /status route of NIS API
 conn.get('/account/get', {'address': 'NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG'}) # access /account/get route with address=NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG get parameter
 conn.get_account_info('NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG') # get current status of 'NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG'
