@@ -46,6 +46,12 @@ class Connection(object):
     def num2nem(self, num):
         return num / 1000000
 
+    def pubkey2addr(self, pubkey):
+        return self.get(
+            '/account/get/from-public-key',
+            {'publicKey': pubkey}
+        )['account']['address']
+
     def get(self, route, param=None):
         """get request
 
