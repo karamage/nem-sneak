@@ -26,13 +26,18 @@ class Connection(object):
             'http://localhost:7890'
 
     def dt2ts(self, dt):
-        """convert native datetime to NEM timeStamp
+        """convert datetime to NEM timeStamp
 
-        :param dt: native datetime
+        :param dt: datetime
         """
-        return int((
-            self.tz.localize(dt).astimezone(timezone.utc) - nem_epoch
-        ).total_seconds())
+        if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+            return int((
+                self.tz.localize(dt).astimezone(timezone.utc) - nem_epoch
+            ).total_seconds())
+        else:
+            return int((
+                dt.astimezone(timezone.utc) - nem_epoch
+            ).total_seconds())
 
     def ts2dt(self, ts):
         """convert NEM timeStamp to tz aware datetime
