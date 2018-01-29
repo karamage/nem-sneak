@@ -6,7 +6,7 @@ from urllib import request
 from codecs import getreader
 from datetime import datetime, timezone
 import time
-from threading import Thread, local
+from threading import Thread
 import collections
 
 import pytz
@@ -236,7 +236,7 @@ class Gazer(Thread):
                     if last_ids[t] < tx['meta']['id']:
                         new_tx.append(tx)
                 if len(new_tx) > 0:
-                    self.hook(t, tmp)
+                    self.hook(t, new_tx)
                     last_ids[t] = tmp[0]['meta']['id']
                 if self.stopping:
                     break
