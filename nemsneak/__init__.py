@@ -14,6 +14,7 @@ __package_name__ = u'nemsneak'
 try:
     from . import core
     Connection = core.Connection
+    Gazer = core.Gazer
 except Exception as e:
     x = e
 
@@ -21,3 +22,4 @@ except Exception as e:
         raise x
 
     Connection = _
+    Gazer = _
