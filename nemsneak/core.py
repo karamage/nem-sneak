@@ -6,6 +6,9 @@ from urllib import request
 from codecs import getreader
 from datetime import datetime, timezone
 import time
+from threading import Thread, local
+import collections
+
 import pytz
 
 
@@ -182,3 +185,61 @@ class Connection(object):
         :param dt_from: native datetime
         """
         return self.get_tx_loop('all', account_address, dt_from)
+
+
+class Gazer(Thread):
+    """Monitoring ``targets`` addresses. call ``hook`` when one of ``targets``
+    makes transactions.
+
+    :param targets: an address or a list of addresses
+    :param conn: ``Connection`` object.
+    :param hook: a callable object. this is called when one of the target
+    makes transactions. ``hook(target_address, transactions[])``
+    :param interval: checking interval
+    :param thread_name: thread name
+    :param daemon: whether if the thread is daemon or not
+    """
+    def __init__(self, targets, conn, hook, interval=5.0, thread_name=None,
+                 daemon=None):
+        super(Gazer, self).__init__(name=thread_name, daemon=daemon)
+        if isinstance(targets, (str, bytes)):
+            self.targets = [targets]
+        elif isinstance(targets, collections.Iterable):
+            self.targets = targets
+        if len(self.targets) == 0:
+            raise Exception('invalid targets')
+        self.interval = interval / len(self.targets)
+        self.hook = hook
+        self.conn = conn
+        self.stopping = False
+
+    def stop(self):
+        self.stopping = True
+
+    def run(self):
+        last_ids = {}
+        for t in self.targets:
+            tmp = self.conn.get_all_tx_single(t)
+            if 'data' in tmp:
+                tmp = tmp['data']
+            if len(tmp) > 0:
+                last_ids[t] = tmp[0]['meta']['id']
+            else:
+                last_ids[t] = None
+        while True:
+            for t in self.targets:
+                tmp = self.conn.get_all_tx_single(t)
+                if 'data' in tmp:
+                    tmp = tmp['data']
+                new_tx = []
+                for tx in tmp:
+                    if last_ids[t] < tx['meta']['id']:
+                        new_tx.append(tx)
+                if len(new_tx) > 0:
+                    self.hook(t, tmp)
+                    last_ids[t] = tmp[0]['meta']['id']
+                if self.stopping:
+                    break
+                time.sleep(self.interval)
+            if self.stopping:
+                break
