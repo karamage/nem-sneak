@@ -47,4 +47,6 @@ conn.get('/account/get', {'address': 'NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG'}
 conn.get_account_info('NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG') # get current status of 'NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG'
 conn.get_all_tx('NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG', datetime(2018, 1, 26, 0, 2, 13)) # get all transaction of 'NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG' from 2018/01/26 00:02:13
 
+g = nemsneak.Gazer('NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG', conn, lambda addr, tx: print((addr, tx))) # create a transaction monitor instance which prints new transactions of 'NC4C6PSUW5CLTDT5SXAGJDQJGZNESKFK5MCN77OG'.
+g.start() # start the monitor thread
 ```
