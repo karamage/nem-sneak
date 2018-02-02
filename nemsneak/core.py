@@ -132,12 +132,13 @@ class Connection(object):
         """
         return self.get_tx_single('all', account_address, id_, hash_)
 
-    def get_tx_loop(self, type_, account_address, dt_from):
+    def get_tx_loop(self, type_, account_address, dt_from, buffer_sec=600):
         """get the transaction data after ``dt_from``
 
         :param type_: transaction type. one of 'all', 'incoming', 'outgoing'
         :param account_address: the address of the account
         :param dt_from: native datetime
+        :param buffer_sec: time buffer
         """
         ts = self.dt2ts(dt_from)
         res = []
@@ -153,10 +154,11 @@ class Connection(object):
                 _t = d['transaction']['timeStamp']
                 if _t >= ts:
                     res.append(d)
+                if id_ is None or id_ > d['meta']['id']:
+                    id_ = d['meta']['id']
                 if last_ts is None or last_ts > _t:
                     last_ts = _t
-                    id_ = d['meta']['id']
-            if last_ts < ts:
+            if (last_ts + buffer_sec) < ts:
                 break
             else:
                 time.sleep(0.1)
@@ -185,6 +187,48 @@ class Connection(object):
         :param dt_from: native datetime
         """
         return self.get_tx_loop('all', account_address, dt_from)
+
+
+class Chaser(Thread):
+    def __init__(self, target, conn, hook, dt_from, thread_name=None,
+                 daemon=None):
+        super(Chaser, self).__init__(name=thread_name, daemon=daemon)
+        self.target = target
+        self.hook = hook
+        self.dt_from = dt_from
+        self.conn = conn
+
+    @classmethod
+    def get_recipient(cls, tx):
+        if tx['transaction']['type'] == 4100:
+            return cls.get_recipient({
+                'meta': tx['meta'],
+                'transaction': tx['transaction']['otherTrans']
+            })
+        if tx['transaction']['type'] == 257:
+            return tx['transaction']['recipient']
+        return None
+
+    def run(self):
+        queue = [(self.target, self.dt_from)]
+        known = {}
+        while len(queue) != 0:
+            t = queue.pop()
+            to_dt = datetime.now(self.conn.tz)
+            if t[0] in known:
+                if known[t[0]] <= t[1]:
+                    continue
+                to_dt = known[t[0]]
+            transactions = self.conn.get_outgoing_tx(t[0], t[1])
+            for tx in transactions:
+                dt = self.conn.ts2dt(tx['transaction']['timeStamp'])
+                if dt < to_dt:
+                    self.hook(t[0], tx)
+                to_addr = self.get_recipient(tx)
+                if to_addr is not None:
+                    queue.append((to_addr, dt))
+            known[t[0]] = t[1]
+            time.sleep(0.1)
 
 
 class Gazer(Thread):
@@ -226,6 +270,7 @@ class Gazer(Thread):
                 last_ids[t] = tmp[0]['meta']['id']
             else:
                 last_ids[t] = None
+            time.sleep(0.1)
         while True:
             for t in self.targets:
                 tmp = self.conn.get_all_tx_single(t)
