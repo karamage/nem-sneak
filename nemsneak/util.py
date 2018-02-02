@@ -12,6 +12,14 @@ def tidy_transaction(tr, conn, sender=None):
             'fee': tr['transaction']['fee'],
             'datetime': conn.ts2dt(tr['transaction']['timeStamp'])
         }
+    elif tr['transaction']['type'] == 16386:
+        return {
+            'from_address': s_,
+            'to_address': None,
+            'amount': 'MosaicModificationTransaction',
+            'fee': tr['transaction']['fee'],
+            'datetime': conn.ts2dt(tr['transaction']['timeStamp'])
+        }
     elif tr['transaction']['type'] == 8193:
         return {
             'from_address': s_,
