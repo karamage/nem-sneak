@@ -132,12 +132,13 @@ class Connection(object):
         """
         return self.get_tx_single('all', account_address, id_, hash_)
 
-    def get_tx_loop(self, type_, account_address, dt_from):
+    def get_tx_loop(self, type_, account_address, dt_from, buffer_sec=600):
         """get the transaction data after ``dt_from``
 
         :param type_: transaction type. one of 'all', 'incoming', 'outgoing'
         :param account_address: the address of the account
         :param dt_from: native datetime
+        :param buffer_sec: time buffer
         """
         ts = self.dt2ts(dt_from)
         res = []
@@ -153,10 +154,11 @@ class Connection(object):
                 _t = d['transaction']['timeStamp']
                 if _t >= ts:
                     res.append(d)
+                if id_ is None or id_ > d['meta']['id']:
+                    id_ = d['meta']['id']
                 if last_ts is None or last_ts > _t:
                     last_ts = _t
-                    id_ = d['meta']['id']
-            if last_ts < ts:
+            if (last_ts + buffer_sec) < ts:
                 break
             else:
                 time.sleep(0.1)
